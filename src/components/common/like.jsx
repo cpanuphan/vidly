@@ -2,17 +2,10 @@ import React from "react";
 import PropTypes from "prop-types";
 
 const Like = ({ liked, onLiked }) => {
-  let classes = "fa fa-heart";
+  let classes = "clickable fa fa-heart";
   if (!liked) classes += "-o";
 
-  return (
-    <i
-      style={{ cursor: "pointer" }}
-      className={classes}
-      aria-hidden="true"
-      onClick={onLiked}
-    />
-  );
+  return <i className={classes} aria-hidden="true" onClick={onLiked} />;
 };
 
 Like.propTypes = {
