@@ -6,6 +6,7 @@ import ListGroup from "./common/listGroup";
 import { getGenres } from "../services/fakeGenreService";
 import MoviesTable from "./moviesTable";
 import _ from "lodash";
+import { Link } from "react-router-dom";
 
 class Movies extends Component {
   state = {
@@ -89,7 +90,7 @@ class Movies extends Component {
 
     return (
       <div className="row">
-        <div className="col-3 pt-3">
+        <div className="col-3">
           <ListGroup
             listItem={genres}
             selectedItem={selectedGenre ? selectedGenre : ""}
@@ -97,6 +98,7 @@ class Movies extends Component {
           />
         </div>
         <div className="col">
+          <Link className="btn btn-primary" to="/movies/new">New Movie</Link>
           <p className="mt-3">Showing {totalCount} movies in the database.</p>
           <MoviesTable
             sortColumn={sortColumn}
