@@ -1,9 +1,9 @@
 import React from "react";
 import Joi from "joi-browser";
 
-import Form from './common/form';
-import { getMovie, saveMovie } from '../services/fakeMovieService';
-import { getGenres } from "../services/fakeGenreService";
+import Form from "./common/form";
+import { getMovie, saveMovie } from "../services/movieService";
+import { getGenres } from "../services/genreService";
 
 class MovieForm extends Form {
   state = {
@@ -11,33 +11,56 @@ class MovieForm extends Form {
       title: "",
       genreId: "",
       numberInStock: "",
-      dailyRentalRate: "",
-      liked: false
+      dailyRentalRate: ""
+      // liked: false
     },
     genres: [],
     errors: {}
   };
 
   schema = {
-    _id: Joi.string().allow('').optional(),
-    title: Joi.string().required().label("Title"),
-    genreId: Joi.string().required().label("Genre"),
-    numberInStock: Joi.number().integer().min(0).max(100).label("Number in Stock"),
-    dailyRentalRate: Joi.number().min(0).max(10).label("Rental"),
-    liked: Joi.boolean()
+    _id: Joi.string()
+      .allow("")
+      .optional(),
+    title: Joi.string()
+      .required()
+      .label("Title"),
+    genreId: Joi.string()
+      .required()
+      .label("Genre"),
+    numberInStock: Joi.number()
+      .integer()
+      .min(0)
+      .max(100)
+      .label("Number in Stock"),
+    dailyRentalRate: Joi.number()
+      .min(0)
+      .max(10)
+      .label("Rental")
+    // liked: Joi.boolean()
   };
 
-  componentDidMount() {
-    const genres = getGenres();
+  async componentDidMount() {
+    await this.populateGenre();
+    await this.populateMovie();
+  }
+
+  async populateGenre() {
+    const { data: genres } = await getGenres();
     this.setState({ genres: genres });
+  }
 
-    const movieId = this.props.match.params.id;
-    if (movieId === "new") return;
+  async populateMovie() {
+    try {
+      const movieId = this.props.match.params.id;
+      if (movieId === "new") return;
 
-    const movie = getMovie(movieId);
-    if (!movie) return this.props.history.replace("/not-found");
-
-    this.setState({ data: this.mapToViewModel(movie) });
+      const { data: movie } = await getMovie(movieId);
+      this.setState({ data: this.mapToViewModel(movie) });
+    } catch (ex) {
+      if (ex.response && ex.response.status === 404)
+        return this.props.history.replace("/not-found");
+    }
   }
 
   mapToViewModel(movie) {
@@ -46,19 +69,18 @@ class MovieForm extends Form {
       title: movie.title,
       genreId: movie.genre._id,
       numberInStock: movie.numberInStock,
-      dailyRentalRate: movie.dailyRentalRate,
-      liked: movie.liked
+      dailyRentalRate: movie.dailyRentalRate
+      // liked: movie.liked
     };
   }
 
-  doSubmit = () => {
-    saveMovie(this.state.data);
+  doSubmit = async () => {
+    await saveMovie(this.state.data);
 
     this.props.history.push("/movies");
-  }
+  };
 
   render() {
-
     return (
       <div>
         <h1>Movie Form</h1>

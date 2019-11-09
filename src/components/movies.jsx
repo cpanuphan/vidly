@@ -1,12 +1,16 @@
 import React, { Component } from "react";
-import { getMovies } from "../services/fakeMovieService";
+import _ from "lodash";
+import { Link } from "react-router-dom";
+import { toast } from "react-toastify";
+
+import { getMovies, deleteMovie } from "../services/movieService";
 import Pagination from "./common/pagination";
 import { paginate } from "../utils/paginate";
 import ListGroup from "./common/listGroup";
-import { getGenres } from "../services/fakeGenreService";
+import { getGenres } from "../services/genreService";
 import MoviesTable from "./moviesTable";
-import _ from "lodash";
-import { Link } from "react-router-dom";
+import Searchbox from "./common/serchbox";
+import logger from "../services/logService";
 
 class Movies extends Component {
   state = {
@@ -14,12 +18,26 @@ class Movies extends Component {
     genres: [],
     currentPage: 1,
     pageSize: 4,
+    searchQuery: "",
+    selectedGenre: null,
     sortColumn: { path: "title", order: "asc" }
   };
 
-  handleDelete = movie => {
+  handleDelete = async movie => {
+    const originalMovies = this.state.movies;
+
     const movies = this.state.movies.filter(m => m._id !== movie._id);
     this.setState({ movies: movies });
+
+    try {
+      await deleteMovie(movie._id);
+    } catch (ex) {
+      if (ex.response && ex.response.status === 404) {
+        toast.error("This movie has already been deleted.");
+        logger.log(ex);
+      }
+      this.setState({ movies: originalMovies });
+    }
   };
 
   handleLike = movie => {
@@ -33,10 +51,12 @@ class Movies extends Component {
     this.setState({ currentPage: pageNumber });
   };
 
-  componentDidMount() {
-    const genres = [{ _id: "", name: "All Genres" }, ...getGenres()];
+  async componentDidMount() {
+    const { data: resultGenres } = await getGenres();
+    const genres = [{ _id: "", name: "All Genres" }, ...resultGenres];
+    const { data: resultMovies } = await getMovies();
     this.setState({
-      movies: getMovies(),
+      movies: resultMovies,
       genres: genres
     });
   }
@@ -44,6 +64,7 @@ class Movies extends Component {
   handleSelectedGenre = selectedItem => {
     this.setState({
       selectedGenre: selectedItem,
+      searchQuery: "",
       currentPage: 1
     });
   };
@@ -52,23 +73,37 @@ class Movies extends Component {
     this.setState({ sortColumn });
   };
 
+  handleSearch = query => {
+    this.setState({
+      searchQuery: query,
+      selectedGenre: "",
+      currentPage: 1
+    });
+  };
+
   getPagedData = () => {
     const {
       pageSize,
       currentPage,
       movies: allMovies,
+      searchQuery,
       selectedGenre,
       sortColumn
     } = this.state;
 
-    const moviesByGenre =
-      selectedGenre && selectedGenre._id
-        ? allMovies.filter(m => m.genre._id === selectedGenre._id)
-        : allMovies;
-    const movies = paginate(moviesByGenre, currentPage, pageSize);
+    let filteredMovies = allMovies;
+    if (selectedGenre && selectedGenre._id) {
+      filteredMovies = allMovies.filter(m => m.genre._id === selectedGenre._id);
+    } else if (searchQuery) {
+      filteredMovies = allMovies.filter(m =>
+        m.title.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    const movies = paginate(filteredMovies, currentPage, pageSize);
     const sorted = _.orderBy(movies, [sortColumn.path], [sortColumn.order]);
 
-    return { totalCount: moviesByGenre.length, data: sorted };
+    return { totalCount: filteredMovies.length, data: sorted };
   };
 
   render() {
@@ -98,8 +133,11 @@ class Movies extends Component {
           />
         </div>
         <div className="col">
-          <Link className="btn btn-primary" to="/movies/new">New Movie</Link>
+          <Link className="btn btn-primary" to="/movies/new">
+            New Movie
+          </Link>
           <p className="mt-3">Showing {totalCount} movies in the database.</p>
+          <Searchbox onChange={this.handleSearch} />
           <MoviesTable
             sortColumn={sortColumn}
             movies={movies}
