@@ -1,11 +1,10 @@
 import http from "./httpService";
-import { apiUrl } from "../config.json";
 
 export function getGenres() {
-  return http.get(apiUrl + "/genres");
+  return http.get("/genres");
 }
 
 export async function getGenre(id) {
-  const genres = await http.post(apiUrl + "/genres");
+  const genres = await http.post("/genres");
   return genres.find(m => m._id === id);
 }

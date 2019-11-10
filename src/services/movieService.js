@@ -1,18 +1,17 @@
 import http from "./httpService";
-import { apiUrl } from "../config.json";
 
-const baseUrl = apiUrl + "/movies";
+const baseUrl = "/movies";
 
 function movieUrl(id) {
-  return `baseUrl/${id}`;
+  return `${baseUrl}/${id}`;
 }
 
 export function getMovies() {
   return http.get(baseUrl);
 }
 
-export async function getMovie(movieId) {
-  return await http.get(movieUrl(movieId));
+export function getMovie(movieId) {
+  return http.get(movieUrl(movieId));
 }
 
 export async function saveMovie(movie) {

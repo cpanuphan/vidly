@@ -116,11 +116,6 @@ class Movies extends Component {
       sortColumn
     } = this.state;
 
-    if (allMovies.length === 0)
-      return (
-        <p className="font-weight-bold mt-3">There are no movie to show.</p>
-      );
-
     const { totalCount, data: movies } = this.getPagedData();
 
     return (
@@ -133,9 +128,11 @@ class Movies extends Component {
           />
         </div>
         <div className="col">
-          <Link className="btn btn-primary" to="/movies/new">
-            New Movie
-          </Link>
+          {this.props.user && (
+            <Link className="btn btn-primary" to="/movies/new">
+              New Movie
+            </Link>
+          )}
           <p className="mt-3">Showing {totalCount} movies in the database.</p>
           <Searchbox onChange={this.handleSearch} />
           <MoviesTable
