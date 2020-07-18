@@ -9,7 +9,7 @@
     "g": "^2.0.1",
     "joi-browser": "13.4",
     "jwt-decode": "^2.2.0",
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.19",
     "prettier": "^1.18.2",
     "prop-types": "15.6.2",
     "raven-js": "^3.27.2",
